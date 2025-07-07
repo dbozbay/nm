@@ -1,15 +1,60 @@
 from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 import lightning.pytorch as pl
+import pandas as pd
 import torch
-import torch.utils
-import torch.utils.data
 from lightning_utilities.core.rank_zero import rank_zero_info
-from torch.utils.data import DataLoader
+from torch import Tensor
+from torch.utils.data import DataLoader, Dataset, random_split
 
 from nm.config import DataModuleConfig
-from nm.datasets import JigsawDataset
+
+
+class JigsawDataset(Dataset):
+    def __init__(
+        self,
+        data_dir: str | Path,
+        *,
+        split: Literal["train", "test"],
+        classes: tuple[str, ...],
+    ) -> None:
+        self.data_dir = Path(data_dir) if isinstance(data_dir, str) else data_dir
+        self.split = split
+        self.classes = classes
+        self.data = self.load_data(self.split)
+
+    def __len__(self) -> int:
+        return len(self.data)
+
+    def __getitem__(self, index: int) -> tuple[str, Tensor]:
+        row = self.data.iloc[index]
+        comment_text = str(row["comment_text"])
+        labels = torch.tensor(
+            row[list(self.classes)].astype(float).values,
+            dtype=torch.float32,
+        )
+        return comment_text, labels
+
+    def load_data(
+        self,
+        split: Literal["train", "test"],
+        train_filename: str = "train.csv",
+        test_text_filename: str = "test.csv",
+        test_labels_filename: str = "test_labels.csv",
+    ) -> pd.DataFrame:
+        train_path = self.data_dir / train_filename
+        test_text_path = self.data_dir / test_text_filename
+        test_labels_path = self.data_dir / test_labels_filename
+
+        if split == "test":
+            df1 = pd.read_csv(test_text_path)
+            df2 = pd.read_csv(test_labels_path)
+            df3 = df1.merge(df2, on="id", validate="1:1")
+            return df3[df3["toxic"] != -1]
+
+        return pd.read_csv(train_path)
 
 
 class JigsawDataModule(pl.LightningDataModule):
@@ -52,7 +97,7 @@ class JigsawDataModule(pl.LightningDataModule):
     def setup(self, stage: str) -> None:
         if stage in ("fit", "validate"):
             dataset = JigsawDataset(self.data_dir, split="train", classes=self.classes)
-            self.train_dataset, self.val_dataset = torch.utils.data.random_split(
+            self.train_dataset, self.val_dataset = random_split(
                 dataset, [1 - self.val_size, self.val_size]
             )
             del dataset

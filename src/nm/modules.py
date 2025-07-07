@@ -2,9 +2,9 @@ from typing import Any
 
 import lightning.pytorch as pl
 import torch
-import torch.nn.functional as F
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import Tensor
+from torch.nn.functional import binary_cross_entropy
 from torchmetrics.classification import MultilabelAccuracy
 
 from nm.config import ModelConfig
@@ -68,7 +68,7 @@ class ToxicModel(pl.LightningModule):
     def test_step(self, batch: Any, batch_idx: int) -> STEP_OUTPUT:
         x, y = batch
         y_hat = self(x)
-        loss = F.binary_cross_entropy(y_hat, y)
+        loss = binary_cross_entropy(y_hat, y)
         acc = self.accuracy(y_hat, y)
         self.log("test_loss", loss, prog_bar=True)
         self.log("test_acc", acc, prog_bar=True)

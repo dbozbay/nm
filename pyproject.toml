@@ -7,7 +7,26 @@ authors = [
     { name = "dbozbay", email = "107803920+dbozbay@users.noreply.github.com" }
 ]
 requires-python = ">=3.11"
-dependencies = ["bot", "model"]
+dependencies = [
+    "torch<2.3",
+    "dotenv>=0.9.9",
+    "lightning>=2.5.2",
+    "litserve>=0.2.12",
+    "transformers==4.49",
+    "jsonargparse[signatures]>=4.40.0",
+    "kagglehub>=0.3.12",
+    "pandas>=2.3.0",
+]
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [project.scripts]
 nm = "nm:main"
@@ -15,13 +34,6 @@ nm = "nm:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.uv.sources]
-bot = { workspace = true }
-model = { workspace = true }
-
-[tool.uv.workspace]
-members = ["packages/*"]
 
 [tool.ruff]
 target-version = "py312"
@@ -46,5 +58,6 @@ ignore = [
 
 [dependency-groups]
 dev = [
+    "ruff>=0.12.2",
     "ty>=0.0.1a11",
 ]

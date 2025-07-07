@@ -5,8 +5,8 @@ import litserve as ls
 import torch
 from litserve import Request, Response
 
-from model.config import AppConfig, Config
-from model.module import SequenceClassificationModule
+from nm.config import AppConfig, Config
+from nm.module import SequenceClassificationModule
 
 
 class SimpleLitAPI(ls.LitAPI):

@@ -1,7 +1,11 @@
 from pathlib import Path
 
 import torch
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import (
+    AutoModel,
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+)
 
 
 def move_to(obj: torch.Tensor | dict | list, device: str) -> torch.Tensor | dict | list:
@@ -36,13 +40,14 @@ def create_dirs(dirs: list[str | Path]) -> None:
 def get_model_and_tokenizer(
     model_name: str,
     num_labels: int,
-    cache_dir: str | Path,
-) -> tuple[AutoTokenizer, AutoModelForSequenceClassification]:
+    cache_dir: str | None,
+) -> tuple[AutoTokenizer, AutoModel]:
     tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=cache_dir)
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name,
         num_labels=num_labels,
         cache_dir=cache_dir,
         problem_type="multi_label_classification",
+        return_dict=True,
     )
-    return tokenizer, model
+    return model, tokenizer

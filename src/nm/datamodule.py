@@ -8,7 +8,7 @@ This module provides:
 Notes:
     - https://lightning.ai/docs/pytorch/stable/data/datamodule.html
     - https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset
-"""  
+"""
 
 from datetime import UTC, datetime
 from pathlib import Path
@@ -22,6 +22,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, random_split
 
 from nm.config import DataModuleConfig
+from nm.utils import resolve_num_workers
 
 
 class JigsawDataset(Dataset):
@@ -134,14 +135,17 @@ class JigsawDataModule(pl.LightningDataModule):
         classes: tuple[str, ...] = DataModuleConfig.classes,
         val_size: float = DataModuleConfig.val_size,
         batch_size: int = DataModuleConfig.batch_size,
-        num_workers: int = DataModuleConfig.num_workers,
+        num_workers: int | str | None = DataModuleConfig.num_workers,
+        persistent_workers: bool = DataModuleConfig.persistent_workers,
     ) -> None:
         super().__init__()
+        self.save_hyperparameters()
         self.data_dir = Path(data_dir) if isinstance(data_dir, str) else data_dir
         self.classes = classes
         self.val_size = val_size
         self.batch_size = batch_size
-        self.num_workers = num_workers
+        self.num_workers = resolve_num_workers(num_workers)
+        self.persistent_workers = persistent_workers
 
     def prepare_data(self) -> None:
         """
@@ -151,10 +155,13 @@ class JigsawDataModule(pl.LightningDataModule):
         Notes:
             https://lightning.ai/docs/pytorch/stable/data/datamodule.html#prepare-data
         """
+        if not self.data_dir.exists():
+            self.data_dir.mkdir(exist_ok=True, parents=True)
+
         data_dir_is_empty = (
             len([f for f in self.data_dir.iterdir() if f.is_file()]) == 0
         )
-        if not self.data_dir.exists() or data_dir_is_empty:
+        if data_dir_is_empty:
             msg = (
                 f"Data directory '{self.data_dir}' is missing or empty. "
                 "Please download the dataset by running:\n"
@@ -180,7 +187,7 @@ class JigsawDataModule(pl.LightningDataModule):
             self.train_dataset, self.val_dataset = random_split(
                 dataset, [1 - self.val_size, self.val_size]
             )
-            del dataset
+            del dataset  # save memory
 
         if stage == "test":
             self.test_dataset = JigsawDataset(
@@ -199,7 +206,13 @@ class JigsawDataModule(pl.LightningDataModule):
         Notes:
             https://lightning.ai/docs/pytorch/stable/data/datamodule.html#train-dataloader
         """
-        return DataLoader(self.train_dataset)
+        return DataLoader(
+            self.train_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            persistent_workers=self.persistent_workers,
+            shuffle=True,
+        )
 
     def val_dataloader(self) -> DataLoader:
         """
@@ -208,7 +221,12 @@ class JigsawDataModule(pl.LightningDataModule):
         Notes:
             https://lightning.ai/docs/pytorch/stable/data/datamodule.html#val-dataloader
         """
-        return DataLoader(self.val_dataset)
+        return DataLoader(
+            self.val_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            persistent_workers=self.persistent_workers,
+        )
 
     def test_dataloader(self) -> DataLoader:
         """
@@ -217,7 +235,12 @@ class JigsawDataModule(pl.LightningDataModule):
         Notes:
             https://lightning.ai/docs/pytorch/stable/data/datamodule.html#test-dataloader
         """
-        return DataLoader(self.test_dataset)
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            persistent_workers=self.persistent_workers,
+        )
 
     def predict_dataloader(self) -> DataLoader:
         """
@@ -226,7 +249,12 @@ class JigsawDataModule(pl.LightningDataModule):
         Notes:
             https://lightning.ai/docs/pytorch/stable/data/datamodule.html#predict-dataloader
         """
-        return DataLoader(self.test_dataset)
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            persistent_workers=self.persistent_workers,
+        )
 
 
 if __name__ == "__main__":

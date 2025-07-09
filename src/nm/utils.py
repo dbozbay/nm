@@ -1,3 +1,4 @@
+import os
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -93,3 +94,17 @@ def unzip_directory(
             z.extractall(extract_to)
         if delete_existing:
             file_path.unlink()
+
+
+def resolve_num_workers(num_workers):
+    """Resolves the number of workers for DataLoader.
+
+    Args:
+        num_workers: 'auto', None, or an integer. If 'auto' or None, uses all available CPU cores.
+
+    Returns:
+        int: The number of workers to use.
+    """
+    if num_workers in (None, "auto"):
+        return os.cpu_count()
+    return int(num_workers)

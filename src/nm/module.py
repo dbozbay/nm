@@ -28,6 +28,7 @@ class ToxicModel(pl.LightningModule):
         learning_rate: Learning rate for the optimizer.
         cache_dir: Directory to cache the model and tokenizer.
     """
+
     def __init__(
         self,
         model_name: str = ModelConfig.model_name,
@@ -37,7 +38,7 @@ class ToxicModel(pl.LightningModule):
         cache_dir: str | None = ModelConfig.cache_dir,
     ) -> None:
         super().__init__()
-        # self.save_hyperparameters()
+        self.save_hyperparameters()
         self.model_name = model_name
         self.num_classes = num_classes
         self.max_token_len = max_token_len

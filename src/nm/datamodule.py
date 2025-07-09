@@ -8,7 +8,7 @@ This module provides:
 Notes:
     - https://lightning.ai/docs/pytorch/stable/data/datamodule.html
     - https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset
-"""  # noqa: E501
+"""  
 
 from datetime import UTC, datetime
 from pathlib import Path

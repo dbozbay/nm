@@ -1,7 +1,7 @@
 from lightning.pytorch.cli import LightningCLI
 
-from nm.datamodules import JigsawDataModule
-from nm.models import ToxicModel
+from nm.datamodule import JigsawDataModule
+from nm.module import ToxicModel
 
 
 def cli_main():

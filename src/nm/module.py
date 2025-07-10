@@ -142,6 +142,15 @@ class ToxicModel(pl.LightningModule):
         """
         return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
 
+    # def configure_callbacks(self):
+    #     checkpoint = ModelCheckpoint(
+    #         monitor=self.monitor,
+    #         dirpath=self.ckpt_dir,
+    #         filename=self.ckpt_filename,
+    #     )
+    #     early_stopping = EarlyStopping(monitor=self.monitor, patience=self.patience, verbose=True)
+    #     return [checkpoint, early_stopping]
+
     # TODO: Implement predict_step
 
 

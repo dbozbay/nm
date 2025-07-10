@@ -33,9 +33,9 @@ class ModelConfig:
 
 @dataclass
 class TrainerConfig:
-    precision: str | None = "16-mixed"
+    # precision: str | None = "16-mixed"
     max_epochs: int = 5
-    seed: int = 10
+    seed: int = 18
     deterministic: bool = True  # For reproducability
     log_dir: str | None = None
     ckpt_dir: str | None = "checkpoints"

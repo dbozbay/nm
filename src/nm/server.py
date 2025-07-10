@@ -1,29 +1,28 @@
-import os
 from pathlib import Path
 
 import litserve as ls
 import torch
 from litserve import Request, Response
 
-from nm.config import AppConfig, Config
-from nm.module import SequenceClassificationModule
+from nm.config import AppConfig
+from nm.module import ToxicModel
 
 
 class SimpleLitAPI(ls.LitAPI):
     def setup(
         self,
         device: str,
-        checkpoint: str = AppConfig.finetuned,
-        ckpt_dir: str | Path = Config().ckpt_dir,
+        checkpoint: str | Path,
     ) -> None:
+        self.device = device
+        self.checkpoint = (
+            Path(checkpoint) if isinstance(checkpoint, str) else checkpoint
+        )
         self.precision = torch.bfloat16
-        self.lit_module = SequenceClassificationModule.load_from_checkpoint(
-            os.path.join(ckpt_dir, checkpoint)
-        ).to(device)
-        self.lit_module.to(device).to(self.precision)
-        self.lit_module.eval()
 
-        self.labels = self.lit_module.labels
+        self.lit_module = ToxicModel.load_from_checkpoint(self.checkpoint)
+        self.lit_module.to(self.device).to(self.precision)
+        self.lit_module.eval()
 
     async def decode_request(self, request: Request):
         return request["input"]
